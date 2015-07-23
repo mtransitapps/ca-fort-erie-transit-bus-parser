@@ -80,7 +80,7 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public boolean excludeRoute(GRoute gRoute) {
-		if (!FE.equals(gRoute.agency_id)) {
+		if (!FE.equals(gRoute.getAgencyId())) {
 			return true;
 		}
 		return super.excludeRoute(gRoute);
@@ -93,7 +93,7 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public long getRouteId(GRoute gRoute) {
-		if (RID_FE001.equals(gRoute.route_id)) {
+		if (RID_FE001.equals(gRoute.getRouteId())) {
 			return FE001_RID;
 		}
 		System.out.printf("\nUnexpected route ID for %s!\n", gRoute);
@@ -107,8 +107,8 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public String getRouteShortName(GRoute gRoute) {
-		if (StringUtils.isEmpty(gRoute.route_short_name)) {
-			if (RID_FE001.equals(gRoute.route_id)) {
+		if (StringUtils.isEmpty(gRoute.getRouteShortName())) {
+			if (RID_FE001.equals(gRoute.getRouteId())) {
 				return FE001_RSN;
 			}
 		}
@@ -157,15 +157,7 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public Pair<Long[], Integer[]> splitTripStop(MRoute mRoute, GTrip gTrip, GTripStop gTripStop, ArrayList<MTrip> splitTrips, GSpec routeGTFS) {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.id)) {
-			RouteTripSpec rts = ALL_ROUTE_TRIPS2.get(mRoute.id);
-			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, //
-					rts.getBeforeAfterStopIds(0), //
-					rts.getBeforeAfterStopIds(1), //
-					rts.getBeforeAfterBothStopIds(0), //
-					rts.getBeforeAfterBothStopIds(1), //
-					rts.getTripId(0), //
-					rts.getTripId(1), //
-					rts.getAllBeforeAfterStopIds());
+			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.id));
 		}
 		return super.splitTripStop(mRoute, gTrip, gTripStop, splitTrips, routeGTFS);
 	}
@@ -192,7 +184,7 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public String cleanStopName(String gStopName) {
 		gStopName = AND.matcher(gStopName).replaceAll(AND_REPLACEMENT);
-		gStopName = CleanUtils.CLEAN_SLASHES.matcher(gStopName).replaceAll(CleanUtils.CLEAN_SLASHES_REPLACEMENT);
+		gStopName = CleanUtils.cleanSlashes(gStopName);
 		gStopName = CleanUtils.removePoints(gStopName);
 		gStopName = CleanUtils.cleanNumbers(gStopName);
 		gStopName = CleanUtils.cleanStreetTypes(gStopName);
@@ -203,9 +195,9 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public int getStopId(GStop gStop) {
-		int indexOf = gStop.stop_id.indexOf(S_FE);
+		int indexOf = gStop.getStopId().indexOf(S_FE);
 		if (indexOf >= 0) {
-			String stopIdS = gStop.stop_id.substring(indexOf + S_FE.length());
+			String stopIdS = gStop.getStopId().substring(indexOf + S_FE.length());
 			if (Utils.isDigitsOnly(stopIdS)) {
 				return 100000 + Integer.parseInt(stopIdS);
 			}
