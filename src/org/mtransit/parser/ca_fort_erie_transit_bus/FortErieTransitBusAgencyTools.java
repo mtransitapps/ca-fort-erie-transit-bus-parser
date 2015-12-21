@@ -124,12 +124,15 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 		return AGENCY_COLOR;
 	}
 
+	private static final String CRYSTAL_BEACH = "Crystal Beach";
+	private static final String JARVIS_STREET = "Jarvis St";
+
 	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
 		map2.put(FE001_RID, new RouteTripSpec(FE001_RID, //
-				MDirectionType.EAST.intValue(), MTrip.HEADSIGN_TYPE_STRING, "Jarvis St", //
-				MDirectionType.WEST.intValue(), MTrip.HEADSIGN_TYPE_STRING, "Crystal Beach") //
+				MDirectionType.EAST.intValue(), MTrip.HEADSIGN_TYPE_STRING, JARVIS_STREET, //
+				MDirectionType.WEST.intValue(), MTrip.HEADSIGN_TYPE_STRING, CRYSTAL_BEACH) //
 				.addTripSort(MDirectionType.EAST.intValue(), //
 						Arrays.asList(new String[] { "S_FE33", "S_FE18", "S_FE11", "S_FE1" })) //
 				.addTripSort(MDirectionType.WEST.intValue(), //
@@ -171,8 +174,15 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 		System.exit(-1);
 	}
 
+	private static final Pattern STARTS_WITH_TO = Pattern.compile("(^to[\\s]*)", Pattern.CASE_INSENSITIVE);
+
+	private static final Pattern CRISTAL_BEACH = Pattern.compile("((^|\\W){1}(cristal beach)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
+	private static final String CRISTAL_BEACH_REPLACEMENT = "$2" + CRYSTAL_BEACH + "$4";
+
 	@Override
 	public String cleanTripHeadsign(String tripHeadsign) {
+		tripHeadsign = STARTS_WITH_TO.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
+		tripHeadsign = CRISTAL_BEACH.matcher(tripHeadsign).replaceAll(CRISTAL_BEACH_REPLACEMENT);
 		tripHeadsign = CleanUtils.cleanNumbers(tripHeadsign);
 		tripHeadsign = CleanUtils.cleanStreetTypes(tripHeadsign);
 		return CleanUtils.cleanLabel(tripHeadsign);
