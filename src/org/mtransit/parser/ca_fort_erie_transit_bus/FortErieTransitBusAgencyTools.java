@@ -1,7 +1,6 @@
 package org.mtransit.parser.ca_fort_erie_transit_bus;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -22,14 +21,12 @@ import org.mtransit.parser.gtfs.data.GStop;
 import org.mtransit.parser.gtfs.data.GTrip;
 import org.mtransit.parser.gtfs.data.GTripStop;
 import org.mtransit.parser.mt.data.MAgency;
-import org.mtransit.parser.mt.data.MDirectionType;
 import org.mtransit.parser.mt.data.MRoute;
 import org.mtransit.parser.mt.data.MTrip;
 import org.mtransit.parser.mt.data.MTripStop;
 
 // http://www.niagararegion.ca/government/opendata/data-set.aspx#id=32
-// http://maps-dev.niagararegion.ca/GoogleTransit/NiagaraRegionTransit.zip
-// https://www.niagararegion.ca/downloads/transit/NiagaraRegionTransit.zip
+// https://maps.niagararegion.ca/googletransit/NiagaraRegionTransit.zip
 public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(String[] args) {
@@ -77,7 +74,7 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 		return super.excludeTrip(gTrip);
 	}
 
-	private static final String FE = "FE";
+	private static final String FE = "FE_F2017_26";
 
 	@Override
 	public boolean excludeRoute(GRoute gRoute) {
@@ -94,25 +91,14 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public long getRouteId(GRoute gRoute) {
-		if (RID_FE001.equals(gRoute.getRouteId())) {
-			return FE001_RID;
+		if (gRoute.getRouteId().startsWith("FE_F2017_")) {
+			return Long.parseLong(gRoute.getRouteId().substring("FE_F2017_".length()));
 		}
-		System.out.printf("\nUnexpected route ID for %s!\n", gRoute);
-		System.exit(-1);
-		return -1l;
+		return super.getRouteId(gRoute);
 	}
-
-	private static final long FE001_RID = 1l;
-	private static final String RID_FE001 = "R_FE001";
-	private static final String FE001_RSN = "FE";
 
 	@Override
 	public String getRouteShortName(GRoute gRoute) {
-		if (StringUtils.isEmpty(gRoute.getRouteShortName())) {
-			if (RID_FE001.equals(gRoute.getRouteId())) {
-				return FE001_RSN;
-			}
-		}
 		return super.getRouteShortName(gRoute);
 	}
 
@@ -125,20 +111,10 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 		return AGENCY_COLOR;
 	}
 
-	private static final String CRYSTAL_BEACH = "Crystal Beach";
-	private static final String JARVIS_STREET = "Jarvis St";
 
 	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
-		map2.put(FE001_RID, new RouteTripSpec(FE001_RID, //
-				MDirectionType.EAST.intValue(), MTrip.HEADSIGN_TYPE_STRING, JARVIS_STREET, //
-				MDirectionType.WEST.intValue(), MTrip.HEADSIGN_TYPE_STRING, CRYSTAL_BEACH) //
-				.addTripSort(MDirectionType.EAST.intValue(), //
-						Arrays.asList(new String[] { "S_FE33", "S_FE18", "S_FE11", "S_FE1" })) //
-				.addTripSort(MDirectionType.WEST.intValue(), //
-						Arrays.asList(new String[] { "S_FE1", "S_FE11", "S_FE18", "S_FE33" })) //
-				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
 	}
 
@@ -171,30 +147,26 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
 			return; // split
 		}
-		System.out.printf("\n%s: Unexpected trip %s!\n", mRoute.getId(), gTrip);
-		System.exit(-1);
+		String tripHeadsign = gTrip.getTripHeadsign();
+		if (StringUtils.isEmpty(tripHeadsign)) {
+			tripHeadsign = mRoute.getShortName();
+		}
+		mTrip.setHeadsignString(cleanTripHeadsign(tripHeadsign), gTrip.getDirectionId() == null ? 0 : gTrip.getDirectionId());
 	}
 
 	private static final Pattern STARTS_WITH_TO = Pattern.compile("(^to[\\s]*)", Pattern.CASE_INSENSITIVE);
 
-	private static final Pattern CRISTAL_BEACH = Pattern.compile("((^|\\W){1}(cristal beach)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
-	private static final String CRISTAL_BEACH_REPLACEMENT = "$2" + CRYSTAL_BEACH + "$4";
-
 	@Override
 	public String cleanTripHeadsign(String tripHeadsign) {
 		tripHeadsign = STARTS_WITH_TO.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
-		tripHeadsign = CRISTAL_BEACH.matcher(tripHeadsign).replaceAll(CRISTAL_BEACH_REPLACEMENT);
 		tripHeadsign = CleanUtils.cleanNumbers(tripHeadsign);
 		tripHeadsign = CleanUtils.cleanStreetTypes(tripHeadsign);
 		return CleanUtils.cleanLabel(tripHeadsign);
 	}
 
-	private static final Pattern AND = Pattern.compile("((^|\\W){1}(and)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
-	private static final String AND_REPLACEMENT = "$2&$4";
-
 	@Override
 	public String cleanStopName(String gStopName) {
-		gStopName = AND.matcher(gStopName).replaceAll(AND_REPLACEMENT);
+		gStopName = CleanUtils.CLEAN_AND.matcher(gStopName).replaceAll(CleanUtils.CLEAN_AND_REPLACEMENT);
 		gStopName = CleanUtils.cleanSlashes(gStopName);
 		gStopName = CleanUtils.removePoints(gStopName);
 		gStopName = CleanUtils.cleanNumbers(gStopName);
@@ -202,19 +174,9 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 		return CleanUtils.cleanLabel(gStopName);
 	}
 
-	private static final String S_FE = "S_FE";
 
 	@Override
 	public int getStopId(GStop gStop) {
-		int indexOf = gStop.getStopId().indexOf(S_FE);
-		if (indexOf >= 0) {
-			String stopIdS = gStop.getStopId().substring(indexOf + S_FE.length());
-			if (Utils.isDigitsOnly(stopIdS)) {
-				return 100000 + Integer.parseInt(stopIdS);
-			}
-		}
-		System.out.printf("\nUnexpected stop ID %s!\n", gStop);
-		System.exit(-1);
-		return -1;
+		return Integer.parseInt(gStop.getStopCode()); // use stop code as stop ID
 	}
 }
