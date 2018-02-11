@@ -50,6 +50,7 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 		System.out.printf("\nGenerating Fort Erie Transit bus data... DONE in %s.\n", Utils.getPrettyDuration(System.currentTimeMillis() - start));
 	}
 
+
 	@Override
 	public boolean excludeCalendar(GCalendar gCalendar) {
 		if (this.serviceIds != null) {
@@ -74,11 +75,11 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 		return super.excludeTrip(gTrip);
 	}
 
-	private static final String FE = "FE_F2017_26";
+	private static final String FE = "FE_";
 
 	@Override
 	public boolean excludeRoute(GRoute gRoute) {
-		if (!FE.equals(gRoute.getAgencyId())) {
+		if (!gRoute.getAgencyId().startsWith(FE)) {
 			return true;
 		}
 		return super.excludeRoute(gRoute);
@@ -89,12 +90,13 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 		return MAgency.ROUTE_TYPE_BUS;
 	}
 
+	private static final Pattern STARTS_WITH_AGENCY_ID = Pattern.compile("(^fe_(f|w)[\\d]{2,4}_)", Pattern.CASE_INSENSITIVE);
+
 	@Override
 	public long getRouteId(GRoute gRoute) {
-		if (gRoute.getRouteId().startsWith("FE_F2017_")) {
-			return Long.parseLong(gRoute.getRouteId().substring("FE_F2017_".length()));
-		}
-		return super.getRouteId(gRoute);
+		String routeId = gRoute.getRouteId();
+		routeId = STARTS_WITH_AGENCY_ID.matcher(routeId).replaceAll(StringUtils.EMPTY);
+		return Long.parseLong(routeId);
 	}
 
 	@Override
@@ -111,7 +113,6 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 		return AGENCY_COLOR;
 	}
 
-
 	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
@@ -121,7 +122,7 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public int compareEarly(long routeId, List<MTripStop> list1, List<MTripStop> list2, MTripStop ts1, MTripStop ts2, GStop ts1GStop, GStop ts2GStop) {
 		if (ALL_ROUTE_TRIPS2.containsKey(routeId)) {
-			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
+			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop, this);
 		}
 		return super.compareEarly(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
 	}
@@ -137,7 +138,7 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public Pair<Long[], Integer[]> splitTripStop(MRoute mRoute, GTrip gTrip, GTripStop gTripStop, ArrayList<MTrip> splitTrips, GSpec routeGTFS) {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
-			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()));
+			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()), this);
 		}
 		return super.splitTripStop(mRoute, gTrip, gTripStop, splitTrips, routeGTFS);
 	}
@@ -173,7 +174,6 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 		gStopName = CleanUtils.cleanStreetTypes(gStopName);
 		return CleanUtils.cleanLabel(gStopName);
 	}
-
 
 	@Override
 	public int getStopId(GStop gStop) {
