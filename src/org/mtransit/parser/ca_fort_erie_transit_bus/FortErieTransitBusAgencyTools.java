@@ -50,6 +50,10 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 		System.out.printf("\nGenerating Fort Erie Transit bus data... DONE in %s.\n", Utils.getPrettyDuration(System.currentTimeMillis() - start));
 	}
 
+	@Override
+	public boolean excludingAll() {
+		return this.serviceIds != null && this.serviceIds.isEmpty();
+	}
 
 	@Override
 	public boolean excludeCalendar(GCalendar gCalendar) {
