@@ -94,7 +94,7 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 		return MAgency.ROUTE_TYPE_BUS;
 	}
 
-	private static final Pattern STARTS_WITH_AGENCY_ID = Pattern.compile("(^fe_(f|w)[\\d]{2,4}_)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern STARTS_WITH_AGENCY_ID = Pattern.compile("(^fe_(f|w|s)[\\d]{2,4}_)", Pattern.CASE_INSENSITIVE);
 
 	@Override
 	public long getRouteId(GRoute gRoute) {
