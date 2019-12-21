@@ -83,6 +83,9 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public boolean excludeRoute(GRoute gRoute) {
+		if (gRoute.getAgencyId().startsWith("FE_F19_")) {
+			return true; // excluding merged old schedule #TBD
+		}
 		if (!gRoute.getAgencyId().startsWith(FE)) {
 			return true;
 		}
