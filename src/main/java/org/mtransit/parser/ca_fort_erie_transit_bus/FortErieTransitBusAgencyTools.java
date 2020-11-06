@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.DefaultAgencyTools;
+import org.mtransit.parser.MTLog;
 import org.mtransit.parser.Pair;
 import org.mtransit.parser.SplitUtils;
 import org.mtransit.parser.SplitUtils.RouteTripSpec;
@@ -43,11 +44,11 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public void start(String[] args) {
-		System.out.printf("\nGenerating Fort Erie Transit bus data...");
+		MTLog.log("Generating Fort Erie Transit bus data...");
 		long start = System.currentTimeMillis();
 		this.serviceIds = extractUsefulServiceIds(args, this, true);
 		super.start(args);
-		System.out.printf("\nGenerating Fort Erie Transit bus data... DONE in %s.\n", Utils.getPrettyDuration(System.currentTimeMillis() - start));
+		MTLog.log("Generating Fort Erie Transit bus data... DONE in %s.", Utils.getPrettyDuration(System.currentTimeMillis() - start));
 	}
 
 	@Override
@@ -83,11 +84,10 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public boolean excludeRoute(GRoute gRoute) {
-		if (gRoute.getAgencyId().startsWith("FE_F19_")) {
-			return true; // excluding merged old schedule #TBD
-		}
-		if (!gRoute.getAgencyId().startsWith(FE)) {
-			return true;
+		if (!gRoute.getAgencyId().startsWith(FE)
+			// && !gRoute.getAgencyId.startWith("AllNRT_") NO ROUTE INSTIDE
+			) {
+			return true; // excluded
 		}
 		return super.excludeRoute(gRoute);
 	}
@@ -106,11 +106,6 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 		return Long.parseLong(routeId);
 	}
 
-	@Override
-	public String getRouteShortName(GRoute gRoute) {
-		return super.getRouteShortName(gRoute);
-	}
-
 	private static final String AGENCY_COLOR_GOLD = "A68E34"; // GOLD (from web site CSS)
 
 	private static final String AGENCY_COLOR = AGENCY_COLOR_GOLD;
@@ -122,7 +117,7 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 
 	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
-		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
+		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
 		ALL_ROUTE_TRIPS2 = map2;
 	}
 
