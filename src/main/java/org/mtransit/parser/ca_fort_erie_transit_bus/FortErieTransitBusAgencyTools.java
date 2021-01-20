@@ -157,6 +157,11 @@ public class FortErieTransitBusAgencyTools extends DefaultAgencyTools {
 		mTrip.setHeadsignString(cleanTripHeadsign(tripHeadsign), gTrip.getDirectionId() == null ? 0 : gTrip.getDirectionId());
 	}
 
+	@Override
+	public boolean directionFinderEnabled() {
+		return true;
+	}
+
 	private static final Pattern STARTS_WITH_TO = Pattern.compile("(^to[\\s]*)", Pattern.CASE_INSENSITIVE);
 
 	@Override
